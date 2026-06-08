@@ -1,29 +1,29 @@
 ---
 name: video-to-skill
 description: >-
-  Turns video or transcript content into a Cursor Agent Skill, or updates an
-  existing skill with new knowledge. Accepts YouTube, Google Meet exports,
-  Zoom/Teams/Loom captions, pasted transcripts, and other common sources.
-  Supports multiple sources per skill. Use when the user wants to create or
-  update a skill from a video, meeting, webinar, tutorial, transcript, talk, or
-  lecture.
+  Turns video or transcript content into an Agent Skill (open standard), or
+  updates an existing skill with new knowledge. Accepts YouTube, Google Meet
+  exports, Zoom/Teams/Loom captions, pasted transcripts, and other common
+  sources. Supports multiple sources per skill. Use when the user wants to
+  create or update a skill from a video, meeting, webinar, tutorial, transcript,
+  talk, or lecture.
 ---
 
 # Video to Skill
 
-Turn video or transcript knowledge into a reusable Cursor Agent Skill — **create new** or **update existing**. **Deliver the final skill directory** — quality validation runs internally during build, not as separate eval files.
+Turn video or transcript knowledge into a reusable [Agent Skill](https://agentskills.io) — **create new** or **update existing**. Output works with Cursor, Codex, Claude Code, and any agent that supports the open standard. **Deliver the final skill directory** — quality validation runs internally during build, not as separate eval files.
 
-Follow Cursor skill best practices: concise `SKILL.md`, progressive disclosure via `reference.md`, third-person description, delta-only content.
+Follow [Agent Skills best practices](https://agentskills.io/specification): concise `SKILL.md`, progressive disclosure via `reference.md`, third-person description, delta-only content.
 
 ## Prerequisites
 
-For auto-fetch and file parsing, install dependencies once per machine:
+For auto-fetch and file parsing, install dependencies once per machine. Run commands from **this skill directory** (where `requirements.txt` and `scripts/` live — bundled when installed via `npx skills add`):
 
 ```bash
 python3 -m pip install -r requirements.txt
 ```
 
-Run provider scripts from the project root (`skills-generator/`). See [providers.md](providers.md) for export steps per platform.
+See [providers.md](providers.md) for export steps per platform.
 
 ## Workflow
 
@@ -174,11 +174,20 @@ Subcategories discussed:
 
 ### Step 4: Detect existing skill → create or update path
 
-After identifying the main subject, check whether a skill already exists:
+After identifying the main subject, check whether a skill already exists. Search **all** standard skill directories:
 
 ```
-.cursor/skills/<main-subject>/SKILL.md       # project
-~/.cursor/skills/<main-subject>/SKILL.md     # personal
+# Project-level
+.agents/skills/<main-subject>/SKILL.md       # open standard (preferred)
+.cursor/skills/<main-subject>/SKILL.md
+.claude/skills/<main-subject>/SKILL.md
+.codex/skills/<main-subject>/SKILL.md
+
+# Personal (global)
+~/.agents/skills/<main-subject>/SKILL.md
+~/.cursor/skills/<main-subject>/SKILL.md
+~/.claude/skills/<main-subject>/SKILL.md
+~/.codex/skills/<main-subject>/SKILL.md
 ```
 
 Also honor explicit user intent: "update `@playwright`", "add to my existing skill", or a path they provide.
@@ -206,7 +215,7 @@ Note: older skills may lack `reference.md`. Plan to create or backfill it during
 Compare the new video's subcategories to what's already in the skill. Present a merge plan:
 
 ```
-Existing skill: playwright (.cursor/skills/playwright/)
+Existing skill: playwright (.agents/skills/playwright/)
 
 Merge plan:
   NEW       Component testing with mount()           ~12:00–18:30
@@ -239,6 +248,7 @@ Use AskQuestion when available.
 | Create a skill for **[main subject]**? | Confirms skill name |
 | Include all subcategories, or exclude some? | Scope filter |
 | Where to save? | personal or project |
+| Which skills directory? | `.agents/skills/` (default), `.cursor/skills/`, or agent-specific path |
 
 **Update path:**
 
@@ -330,8 +340,9 @@ description: >-
 Rules:
 - **Third person** ("Writes and debugs…"), never "I can help you…"
 - **WHAT + WHEN** — capabilities and trigger terms
-- Max 1024 chars; lowercase hyphens in `name`
-- **Never** create skills in `~/.cursor/skills-cursor/`
+- Max 1024 chars; lowercase hyphens in `name`; `name` must match parent folder per [spec](https://agentskills.io/specification)
+- Default output to `.agents/skills/` (open standard); use `.cursor/skills/` or other agent paths when the user prefers
+- **Never** create skills in `~/.cursor/skills-cursor/` (Cursor internal directory)
 
 ### Step 8: Design file split
 
@@ -381,16 +392,20 @@ Create only when the skill has many complete, copy-pasteable examples (e.g. 4+ m
 
 #### Create path
 
-Write the full skill directory:
+Write the full skill directory to the confirmed location:
 
 ```
-.cursor/skills/<main-subject>/          # project
-~/.cursor/skills/<main-subject>/        # personal
+.agents/skills/<main-subject>/          # project (open standard, preferred)
+.cursor/skills/<main-subject>/          # project (Cursor)
+~/.agents/skills/<main-subject>/        # personal (open standard)
+~/.cursor/skills/<main-subject>/        # personal (Cursor)
 
 ├── SKILL.md                            # required
 ├── reference.md                        # required (default)
 └── examples.md                         # optional
 ```
+
+Use `.agents/skills/` unless the user specifies another supported path.
 
 #### Update path
 
@@ -430,7 +445,7 @@ After writing, verify:
 ### Step 10: Confirm with user
 
 Show:
-1. Skill path and `@skill-name` invocation
+1. Skill path and invocation (`@skill-name` in Cursor, `/skill-name` where slash commands are supported)
 2. Mode: **created** or **updated**
 3. Files written (`SKILL.md`, `reference.md`, `examples.md` if any)
 4. Subcategories included (and excluded, if any)
@@ -523,7 +538,7 @@ Run internally before Step 9:
 3. Confirms scope (excludes Checkly monitoring) and save location
 4. Runs internal eval loop: flaky-login prompt → keeps `addLocatorHandler`; slow-goto prompt → keeps `domcontentloaded`; drops generic "use getByRole" filler
 5. Designs split: SKILL.md (routing + quick patterns) + reference.md (full flakiness/speed/MCP depth)
-6. Writes `.cursor/skills/playwright/SKILL.md` and `.cursor/skills/playwright/reference.md`
+6. Writes `.agents/skills/playwright/SKILL.md` and `.agents/skills/playwright/reference.md`
 7. Confirms path, files, subcategories, `@playwright`
 
 ### Update
@@ -532,7 +547,7 @@ Run internally before Step 9:
 
 **Agent:**
 1. Fetches transcript → finds **Component testing** (~12:00–18:30) and minor **Flakiness** additions
-2. Reads `.cursor/skills/playwright/SKILL.md` + `reference.md`
+2. Reads `.agents/skills/playwright/SKILL.md` + `reference.md`
 3. Merge plan: NEW component testing; ENRICH flakiness (clock mocking); SKIP speed (already covered)
 4. User confirms ENRICH + NEW, skips the rest
 5. Delta test vs existing skill → keeps clock mocking pattern; drops repeated `domcontentloaded` advice

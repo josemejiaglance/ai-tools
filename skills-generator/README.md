@@ -1,6 +1,23 @@
 # Skills Generator
 
-Turn videos, meeting recordings, and transcripts into [Cursor Agent Skills](https://cursor.com/docs/context/skills) — or update existing skills with new knowledge.
+Turn videos, meeting recordings, and transcripts into [Agent Skills](https://agentskills.io) — portable skill packages for any AI coding agent.
+
+## Quick install
+
+No need to clone this repo. Install skills with one command:
+
+```bash
+# List skills
+npx skills add josemejiaglance/ai-tools --list
+
+# Install the meta-skill (creates skills from videos)
+npx skills add josemejiaglance/ai-tools@video-to-skill -y
+
+# Install the example Checkly skill
+npx skills add josemejiaglance/ai-tools@checkly -y
+```
+
+Then invoke `@video-to-skill` in your agent and provide a YouTube URL or transcript.
 
 ## What it does
 
@@ -11,73 +28,43 @@ The **video-to-skill** workflow:
 3. Builds a skill with progressive disclosure (`SKILL.md` + `reference.md`)
 4. Validates that each section adds delta knowledge beyond what the agent already knows
 
-## Setup
+## Python setup (for video-to-skill)
 
-Install Python dependencies once per machine:
+After installing via `npx skills add`, set up transcript tooling from the installed skill directory:
 
 ```bash
-cd skills-generator
+# Find your install path (usually .agents/skills/video-to-skill)
+cd .agents/skills/video-to-skill   # or ~/.agents/skills/video-to-skill with -g
+
 python3 -m pip install -r requirements.txt
+python3 scripts/load_transcript.py "https://youtu.be/VIDEO_ID" -o /tmp/transcript.json
 ```
 
-## Usage
+When developing from a clone, use `skills/video-to-skill/` instead.
 
-### In Cursor
-
-Open this repository (or copy `.cursor/skills/` into your project) and invoke the meta-skill:
+## Usage with your agent
 
 ```
 @video-to-skill
 ```
 
-Then provide a source:
-
-- YouTube URL — auto-fetched
-- Meeting caption file (`.vtt`, `.sbv`, `.srt`)
-- Pasted transcript text
-
 Example:
 
 > Create a skill from https://www.youtube.com/watch?v=EXAMPLE — Playwright topics only
 
-The agent walks through topic confirmation, scope filtering, and skill file generation.
-
-### CLI — load transcripts manually
-
-From the `skills-generator/` directory:
-
-```bash
-# YouTube
-python3 scripts/load_transcript.py "https://www.youtube.com/watch?v=VIDEO_ID" -o /tmp/transcript.json
-
-# Meeting caption file
-python3 scripts/load_transcript.py meeting.vtt --source google-meet -o /tmp/transcript.json
-
-# Multiple sources
-python3 scripts/load_transcript.py "https://youtu.be/VIDEO_ID" meeting.vtt --merge -o /tmp/transcript.json
-
-# Filter by time range (seconds)
-python3 scripts/load_transcript.py "https://youtu.be/VIDEO_ID" --start 300 --end 720 -o /tmp/filtered.json
-```
-
-See [scripts/README.md](scripts/README.md) for full CLI reference.
-
-## Project structure
+## Project layout
 
 ```
-skills-generator/
-├── .cursor/skills/
-│   ├── video-to-skill/     # Meta-skill — create/update skills from video
-│   └── checkly/            # Example output — Checkly network monitoring
-├── scripts/
-│   ├── load_transcript.py  # Unified transcript loader (preferred)
-│   ├── fetch_transcript.py # YouTube-only fetcher (legacy)
-│   └── transcript_formats.py
-├── requirements.txt
-└── README.md
+ai-tools/
+├── skills/                     # Canonical skill packages (install via npx)
+│   ├── video-to-skill/
+│   │   ├── scripts/            # Transcript loaders
+│   │   └── requirements.txt
+│   └── checkly/                # Example generated skill
+└── skills-generator/           # This documentation
 ```
 
-## Supported sources
+## Supported transcript sources
 
 | Provider | Auto-fetch | Input |
 |----------|------------|-------|
@@ -86,34 +73,10 @@ skills-generator/
 | Zoom | No | `.vtt` from cloud recording |
 | Microsoft Teams | No | `.vtt` from meeting recap |
 | Loom | No | `.txt` export or paste |
-| Vimeo | No | `.vtt` captions |
-| Otter / Fireflies / Grain | No | `.txt` / `.srt` export |
 | Pasted text | N/A | Inline in chat or via CLI |
 
-Export guides for each platform: [.cursor/skills/video-to-skill/providers.md](.cursor/skills/video-to-skill/providers.md)
+Export guides: [skills/video-to-skill/providers.md](../skills/video-to-skill/providers.md)
 
-## Skill output format
+## Example output
 
-Generated skills follow Cursor best practices:
-
-```
-skill-name/
-├── SKILL.md        # Routing layer — quick reference, agent instructions
-├── reference.md    # Depth layer — full guidance per subcategory
-└── examples.md     # Optional — only when 4+ copy-paste examples
-```
-
-Install generated skills in:
-
-- `.cursor/skills/<name>/` — project-scoped (team sharing)
-- `~/.cursor/skills/<name>/` — personal (all workspaces)
-
-## Example skill
-
-[checkly/](.cursor/skills/checkly/) was generated from a YouTube webinar and demonstrates the expected output structure. See its [README](.cursor/skills/checkly/README.md) for install and usage.
-
-## Requirements
-
-- Python 3.10+
-- `youtube-transcript-api` (see `requirements.txt`)
-- [Cursor](https://cursor.com) with Agent Skills enabled
+[checkly](../skills/checkly/) was generated from a YouTube webinar. See its [README](../skills/checkly/README.md).

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "notGrouped": "bottom",
+  "groupings": [
+    {
+      "title": "Skills Generator",
+      "description": "Turn videos and transcripts into reusable agent skills for any AI coding agent.",
+      "skills": [
+        "video-to-skill",
+        "checkly"
+      ]
+    }
+  ]
+}

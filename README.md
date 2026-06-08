@@ -1,52 +1,76 @@
 # ai-tools
 
-A collection of tools and [Cursor Agent Skills](https://cursor.com/docs/context/skills) for building AI-assisted workflows.
+A collection of [Agent Skills](https://agentskills.io) and tooling for building AI-assisted workflows. Skills work with Cursor, Codex, Claude Code, and any agent that supports the open standard.
 
-## Contents
+## Install skills
 
-| Path | Description |
-|------|-------------|
-| [skills-generator/](skills-generator/) | Turn videos and transcripts into reusable Cursor skills |
+Use the [skills CLI](https://github.com/vercel-labs/skills) — no clone required:
 
-## Quick start
+```bash
+# List available skills
+npx skills add josemejiaglance/ai-tools --list
 
-Clone the repository and open it in [Cursor](https://cursor.com):
+# Install a specific skill
+npx skills add josemejiaglance/ai-tools@checkly
+
+# Install video-to-skill (includes Python transcript scripts)
+npx skills add josemejiaglance/ai-tools@video-to-skill
+
+# Install to a specific agent
+npx skills add josemejiaglance/ai-tools@checkly -a cursor -y
+
+# Install globally (all projects)
+npx skills add josemejiaglance/ai-tools@checkly -g -y
+
+# Install all skills
+npx skills add josemejiaglance/ai-tools --all -y
+```
+
+Browse more skills at [skills.sh](https://skills.sh/).
+
+## Included skills
+
+| Skill | Install | Description |
+|-------|---------|-------------|
+| **checkly** | `npx skills add josemejiaglance/ai-tools@checkly` | Checkly network monitoring as code — DNS, TCP, ICMP |
+| **video-to-skill** | `npx skills add josemejiaglance/ai-tools@video-to-skill` | Turn videos and transcripts into new agent skills |
+
+After installing, invoke in your agent chat — e.g. `@checkly` in Cursor or `/checkly` where slash commands are supported.
+
+## Clone for development
 
 ```bash
 git clone git@github.com:josemejiaglance/ai-tools.git
 cd ai-tools
 ```
 
-### Use an existing skill
+See [skills-generator/README.md](skills-generator/README.md) for the full video-to-skill workflow and Python setup.
 
-Copy a skill into your project or personal skills directory:
+## Project structure
 
-```bash
-# Project-scoped (shared with the team)
-cp -r skills-generator/.cursor/skills/checkly /path/to/your-project/.cursor/skills/
-
-# Personal (available in all workspaces)
-mkdir -p ~/.cursor/skills
-cp -r skills-generator/.cursor/skills/checkly ~/.cursor/skills/checkly
+```
+ai-tools/
+├── skills/                 # Installable skills (npx skills add)
+│   ├── checkly/
+│   └── video-to-skill/     # Includes scripts/ and requirements.txt
+├── skills-generator/       # Generator docs and dev notes
+└── skills.sh.json          # skills.sh registry metadata
 ```
 
-Then invoke it in Agent chat with `@checkly`.
+## Agent compatibility
 
-### Generate a new skill from a video
+Skills follow the [Agent Skills open standard](https://agentskills.io/specification). The skills CLI installs to the right directory for your agent:
 
-See [skills-generator/README.md](skills-generator/README.md) for setup and the `@video-to-skill` workflow.
-
-## Included skills
-
-| Skill | Description |
-|-------|-------------|
-| [checkly](skills-generator/.cursor/skills/checkly/) | Checkly network monitoring as code — DNS, TCP, ICMP, CLI workflows |
-| [video-to-skill](skills-generator/.cursor/skills/video-to-skill/) | Meta-skill that turns videos and transcripts into new skills |
+| Scope | Paths |
+|-------|-------|
+| Project | `.agents/skills/`, `.cursor/skills/`, `.claude/skills/`, `.codex/skills/` |
+| Personal | `~/.agents/skills/`, `~/.cursor/skills/`, etc. |
 
 ## Requirements
 
-- [Cursor](https://cursor.com) with Agent Skills enabled
-- Python 3.10+ (for transcript tooling in `skills-generator/`)
+- `npx skills` for one-command install (Node.js required for npx only)
+- Python 3.10+ for video-to-skill transcript tooling
+- An AI coding agent with Agent Skills support
 
 ## License
 
