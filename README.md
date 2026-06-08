@@ -1,41 +1,43 @@
 # ai-tools
 
-A collection of [Agent Skills](https://agentskills.io) and tooling for building AI-assisted workflows. Skills work with Cursor, Codex, Claude Code, and any agent that supports the open standard.
+Tools and [Agent Skills](https://agentskills.io) for turning videos and transcripts into reusable skills. Works with Cursor, Codex, Claude Code, and any agent that supports the open standard.
 
-## Install skills
+## Install
 
 Use the [skills CLI](https://github.com/vercel-labs/skills) — no clone required:
 
 ```bash
-# List available skills
-npx skills add josemejiaglance/ai-tools --list
-
-# Install a specific skill
-npx skills add josemejiaglance/ai-tools@checkly
-
-# Install video-to-skill (includes Python transcript scripts)
+# Install the skill generator
 npx skills add josemejiaglance/ai-tools@video-to-skill
 
-# Install to a specific agent
-npx skills add josemejiaglance/ai-tools@checkly -a cursor -y
+# Install for a specific agent, skip prompts
+npx skills add josemejiaglance/ai-tools@video-to-skill -a cursor -y
 
 # Install globally (all projects)
-npx skills add josemejiaglance/ai-tools@checkly -g -y
-
-# Install all skills
-npx skills add josemejiaglance/ai-tools --all -y
+npx skills add josemejiaglance/ai-tools@video-to-skill -g -y
 ```
+
+Then invoke `@video-to-skill` in your agent and provide a YouTube URL, meeting caption file, or pasted transcript.
 
 Browse more skills at [skills.sh](https://skills.sh/).
 
-## Included skills
+## What it does
 
-| Skill | Install | Description |
-|-------|---------|-------------|
-| **checkly** | `npx skills add josemejiaglance/ai-tools@checkly` | Checkly network monitoring as code — DNS, TCP, ICMP |
-| **video-to-skill** | `npx skills add josemejiaglance/ai-tools@video-to-skill` | Turn videos and transcripts into new agent skills |
+The **video-to-skill** skill:
 
-After installing, invoke in your agent chat — e.g. `@checkly` in Cursor or `/checkly` where slash commands are supported.
+1. Loads transcripts from YouTube, Google Meet, Zoom, Teams, Loom, and other sources
+2. Clusters content into a main subject and subcategories
+3. Generates `SKILL.md` + `reference.md` following the Agent Skills standard
+4. Updates existing skills with new knowledge when you ask
+
+## Python setup
+
+After installing, set up transcript tooling:
+
+```bash
+cd .agents/skills/video-to-skill   # or ~/.agents/skills/video-to-skill with -g
+python3 -m pip install -r requirements.txt
+```
 
 ## Clone for development
 
@@ -44,34 +46,24 @@ git clone git@github.com:josemejiaglance/ai-tools.git
 cd ai-tools
 ```
 
-See [skills-generator/README.md](skills-generator/README.md) for the full video-to-skill workflow and Python setup.
+See [skills-generator/README.md](skills-generator/README.md) for full workflow details.
 
 ## Project structure
 
 ```
 ai-tools/
-├── skills/                 # Installable skills (npx skills add)
-│   ├── checkly/
-│   └── video-to-skill/     # Includes scripts/ and requirements.txt
-├── skills-generator/       # Generator docs and dev notes
-└── skills.sh.json          # skills.sh registry metadata
+├── skills/
+│   └── video-to-skill/     # Skill generator + bundled transcript scripts
+├── skills-generator/       # Documentation
+└── skills.sh.json
 ```
-
-## Agent compatibility
-
-Skills follow the [Agent Skills open standard](https://agentskills.io/specification). The skills CLI installs to the right directory for your agent:
-
-| Scope | Paths |
-|-------|-------|
-| Project | `.agents/skills/`, `.cursor/skills/`, `.claude/skills/`, `.codex/skills/` |
-| Personal | `~/.agents/skills/`, `~/.cursor/skills/`, etc. |
 
 ## Requirements
 
-- `npx skills` for one-command install (Node.js required for npx only)
-- Python 3.10+ for video-to-skill transcript tooling
+- `npx skills` for one-command install
+- Python 3.10+ for transcript tooling
 - An AI coding agent with Agent Skills support
 
 ## License
 
-Use and adapt freely. Third-party trademarks belong to their respective owners.
+Use and adapt freely.

@@ -8,7 +8,7 @@ An [Agent Skill](https://agentskills.io) that turns video and transcript content
 npx skills add josemejiaglance/ai-tools@video-to-skill
 ```
 
-The install bundles `scripts/` and `requirements.txt` for transcript loading.
+Bundles `scripts/` and `requirements.txt` for transcript loading.
 
 ```bash
 # Global install
@@ -18,7 +18,7 @@ npx skills add josemejiaglance/ai-tools@video-to-skill -g -y
 ## Python setup
 
 ```bash
-cd .agents/skills/video-to-skill   # or your install path
+cd .agents/skills/video-to-skill
 python3 -m pip install -r requirements.txt
 ```
 
@@ -34,7 +34,7 @@ python3 -m pip install -r requirements.txt
 
 ### Update an existing skill
 
-> Update `@checkly` from this YouTube link — DNS section only
+> Update `@playwright` from this YouTube link — flakiness section only
 
 ### Multi-source
 
@@ -45,7 +45,3 @@ python3 -m pip install -r requirements.txt
 YouTube (auto-fetch), Google Meet, Zoom, Teams, Loom, Vimeo, meeting note exports, and pasted text.
 
 Export guides: [providers.md](providers.md)
-
-## Example output
-
-See the [checkly](../checkly/) skill — generated using this workflow.
