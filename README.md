@@ -55,15 +55,14 @@ git clone git@github.com:josemejiaglance/ai-tools.git
 cd ai-tools
 ```
 
-See [skills-generator/README.md](skills-generator/README.md) for full workflow details.
+See [skills/video-to-skill/README.md](skills/video-to-skill/README.md) for full workflow details.
 
 ## Project structure
 
 ```
 ai-tools/
 ├── skills/
-│   └── video-to-skill/     # Skill generator + bundled transcript scripts
-├── skills-generator/       # Documentation
+│   └── video-to-skill/     # Skill + scripts + documentation
 └── skills.sh.json
 ```
 
