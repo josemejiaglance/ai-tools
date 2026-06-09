@@ -17,8 +17,9 @@ npx skills add josemejiaglance/ai-tools@video-to-skill -g -y
 
 ## Python setup
 
+From the installed skill directory (where `requirements.txt` lives):
+
 ```bash
-cd .agents/skills/video-to-skill
 python3 -m pip install -r requirements.txt
 ```
 
@@ -33,6 +34,8 @@ python3 -m pip install -r requirements.txt
 > Create a skill from https://www.youtube.com/watch?v=VIDEO_ID — only the Playwright sections
 
 ### Update an existing skill
+
+Before creating anything new, the agent searches `~/.cursor/skills/`, `~/.agents/skills/`, and other standard paths (via Glob/Read) for a match — then offers to **update in place** instead of asking where to save.
 
 > Update `@playwright` from this YouTube link — flakiness section only
 
