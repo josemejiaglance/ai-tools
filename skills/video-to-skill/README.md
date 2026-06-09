@@ -31,7 +31,7 @@ For open-standard / multi-agent layout, omit `-a cursor` — installs to `.agent
 2. Clusters content into a main subject and subcategories
 3. Builds a skill with progressive disclosure (`SKILL.md` + `reference.md`)
 4. Validates that each section adds delta knowledge beyond what the agent already knows
-5. Merges new content into existing skills when you ask to update one
+5. Merges new content into existing **project-local** skills (replace, modify, or add)
 
 ## Python setup
 
@@ -60,9 +60,9 @@ python3 scripts/load_transcript.py "https://youtu.be/VIDEO_ID" -o /tmp/transcrip
 
 ### Update an existing skill
 
-Before creating anything new, the agent searches `~/.cursor/skills/`, `~/.agents/skills/`, and other standard paths (via Glob/Read) for a match — then offers to **update in place** instead of asking where to save.
+Generated skills are **project-local only** (e.g. `.cursor/skills/playwright/`). The agent checks the current repo first, then asks: **full replace**, **modify**, or **add** new content.
 
-> Update `@playwright` from this YouTube link — flakiness section only
+> Update our Playwright skill from this YouTube link — flakiness section only
 
 ### Multi-source
 

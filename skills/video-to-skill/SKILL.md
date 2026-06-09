@@ -1,19 +1,33 @@
 ---
 name: video-to-skill
 description: >-
-  Turns video or transcript content into an Agent Skill (open standard), or
-  updates an existing skill with new knowledge. Accepts YouTube, Google Meet
-  exports, Zoom/Teams/Loom captions, pasted transcripts, and other common
-  sources. Supports multiple sources per skill. Use when the user wants to
-  create or update a skill from a video, meeting, webinar, tutorial, transcript,
-  talk, or lecture.
+  Turns video or transcript content into a project-local Agent Skill, or updates
+  one already in the current repo. Never writes to global skill dirs. Accepts
+  YouTube, Google Meet exports, Zoom/Teams/Loom captions, pasted transcripts,
+  and other sources. Use when the user wants to create or update a skill from a
+  video, meeting, webinar, tutorial, transcript, talk, or lecture.
 ---
 
 # Video to Skill
 
-Turn video or transcript knowledge into a reusable [Agent Skill](https://agentskills.io) — **create new** or **update existing**. Output works with Cursor, Codex, Claude Code, and any agent that supports the open standard. **Deliver the final skill directory** — quality validation runs internally during build, not as separate eval files.
+Turn video or transcript knowledge into a **project-local** [Agent Skill](https://agentskills.io) — create new or update existing **in the current repo only**. Quality validation runs internally during build, not as separate eval files.
 
 Follow [Agent Skills best practices](https://agentskills.io/specification): concise `SKILL.md`, progressive disclosure via `reference.md`, third-person description, delta-only content.
+
+## Project-only policy
+
+**All generated skills stay in the current project.** Never create, install, or write skills under global paths (`~/.cursor/skills/`, `~/.agents/skills/`, `~/.claude/skills/`, etc.). Do not suggest global install (`-g`) for output skills.
+
+Valid output roots (project-relative, pick **one** per session):
+
+| Agent / tool | Project path |
+|--------------|--------------|
+| Cursor | `.cursor/skills/<name>/` |
+| Open standard | `.agents/skills/<name>/` |
+| Claude Code | `.claude/skills/<name>/` |
+| Codex | `.codex/skills/<name>/` |
+
+The user chooses exactly **one** directory. Never write the same skill to multiple roots.
 
 ## Prerequisites
 
@@ -32,13 +46,15 @@ Task Progress:
 - [ ] Step 1: Identify input source(s)
 - [ ] Step 2: Load transcript(s)
 - [ ] Step 3: Present topics overview
-- [ ] Step 4: Detect existing skill → create or update path
-- [ ] Step 5: Confirm scope and subcategories
-- [ ] Step 6: Filter transcript content
-- [ ] Step 7: Build and validate skill (internal eval loop)
-- [ ] Step 8: Design file split (SKILL.md + reference.md)
-- [ ] Step 9: Write or merge skill files
-- [ ] Step 10: Confirm with user
+- [ ] Step 4: Detect existing skill in current project
+- [ ] Step 5: Choose mode — replace, modify, or add (if exists) / create new
+- [ ] Step 6: Confirm which video parts to include
+- [ ] Step 7: Choose project skills directory (.cursor / .agents / .claude / .codex — one only)
+- [ ] Step 8: Filter transcript content
+- [ ] Step 9: Build and validate skill (internal eval loop)
+- [ ] Step 10: Design file split (SKILL.md + reference.md)
+- [ ] Step 11: Write or merge skill files
+- [ ] Step 12: Confirm with user
 ```
 
 ### Step 1: Identify input source(s)
@@ -172,57 +188,35 @@ Subcategories discussed:
 - **Subcategories** → sections in `SKILL.md` + matching sections in `reference.md`
 - Multiple skills only when source covers **unrelated domains**
 
-### Step 4: Detect existing skill → create or update path
+### Step 4: Detect existing skill in current project
 
-**Hard gate — complete before any save-location or create questions.** If you have not searched the filesystem, you may not ask "Where should the skill be saved?" or default to creating under `.agents/`.
+**Hard gate — search the current project only.** Do not scan or write `~/` global skill directories. Do not default to `.agents/` without asking.
 
-After identifying the main subject, **search yourself** using Glob/Read/Shell — no helper script required. This should take seconds.
-
-#### 4a. Exact name check
-
-Glob for `<main-subject>/SKILL.md` under every standard root (Cursor first):
-
-| Scope | Paths |
-|-------|-------|
-| Personal | `~/.cursor/skills/`, `~/.agents/skills/`, `~/.claude/skills/`, `~/.codex/skills/` |
-| Project | `.cursor/skills/`, `.agents/skills/`, `.claude/skills/`, `.codex/skills/` |
-
-Example globs (replace `playwright` with the main subject):
+After identifying the main subject, Glob for `<main-subject>/SKILL.md` under **project** roots only:
 
 ```
-~/.cursor/skills/playwright/SKILL.md
-~/.agents/skills/playwright/SKILL.md
-.cursor/skills/playwright/SKILL.md
-.agents/skills/playwright/SKILL.md
+.cursor/skills/<main-subject>/SKILL.md
+.agents/skills/<main-subject>/SKILL.md
+.claude/skills/<main-subject>/SKILL.md
+.codex/skills/<main-subject>/SKILL.md
 ```
 
-#### 4b. Similar-skill scan (when exact match is missing or names may differ)
-
-List skill folders and skim frontmatter `name` + `description`:
+Also scan for similar skills when names may differ:
 
 ```bash
-ls ~/.cursor/skills ~/.agents/skills .cursor/skills .agents/skills 2>/dev/null
+ls .cursor/skills .agents/skills .claude/skills .codex/skills 2>/dev/null
 ```
 
-For each plausible folder, read the first ~15 lines of `SKILL.md`. Treat as **update candidates** when:
-
-- Folder or `name` contains the main subject (`playwright-e2e` ↔ `playwright`)
-- `description` covers the same domain (shared trigger terms, same library/framework)
-
-**When candidates exist**, show full paths and ask **update existing vs create new** — do not jump to save-location as if nothing exists.
-
-Also honor explicit user intent: "update `@playwright`", "add to my existing skill", "use my `.cursor/skills`", or a path they provide.
+Read the first ~15 lines of plausible `SKILL.md` files. Treat as candidates when folder/`name` matches the subject or `description` covers the same domain.
 
 | Found | Action |
 |-------|--------|
-| **No existing skill** | → [Create path](#create-path) (Steps 5–10) |
-| **One match** | **Default to update.** Present merge plan (below); only offer "create new duplicate" if user rejects update |
-| **Match in `~/.cursor/skills/`** | Prefer updating there — do not write to `~/.agents/skills/` unless user explicitly asks |
-| **Both project and personal** | Ask which location to update (default: personal `~/.cursor/skills/` if it exists) |
-| **Same name in `.cursor/skills/` and `.agents/skills/`** | Ask which to update; **never silently pick `.agents/`** |
-| **Name mismatch but similar topic** | Show candidate(s); ask update vs new name |
+| **No match in project** | → create-new path (Steps 5–12) |
+| **One match** | Note its path; proceed to Step 5 (update mode) |
+| **Same skill in multiple project roots** | Ask which copy to update; do not write to both |
+| **Similar name, different topic** | Show candidate; confirm before updating |
 
-**Read existing files before proceeding on the update path:**
+**Read existing files** when a match is found:
 
 ```
 skill-name/
@@ -231,14 +225,22 @@ skill-name/
 └── examples.md     # read if present
 ```
 
-Note: older skills may lack `reference.md`. Plan to create or backfill it during the update.
+### Step 5: Choose mode — replace, modify, or add
 
-#### Update path — diff against existing skill
+Use AskQuestion when available. **Skip this step** when no existing project skill was found — go straight to create-new.
 
-Compare the new video's subcategories to what's already in the skill. Present a merge plan:
+**When a project skill exists**, ask how to apply the new video content:
+
+| Mode | When to use | Behavior |
+|------|-------------|----------|
+| **Full replace** | User wants a clean rewrite from selected video parts | Rebuild `SKILL.md` + `reference.md` from confirmed scope; keep only structure/conventions worth preserving; refresh `## Source` |
+| **Modify** | User wants to update existing sections | Present merge plan (NEW / ENRICH / SKIP / CONFLICT); patch matching sections in place |
+| **Add** | User wants new content only | Add NEW sections; do not rewrite or remove existing sections unless user confirms |
+
+For **modify**, present a merge plan before Step 6:
 
 ```
-Existing skill: playwright (~/.cursor/skills/playwright/)
+Existing skill: playwright (.cursor/skills/playwright/)
 
 Merge plan:
   NEW       Component testing with mount()           ~12:00–18:30
@@ -249,52 +251,50 @@ Merge plan:
 
 | Label | Meaning |
 |-------|---------|
-| **NEW** | Subcategory or pattern not in the skill — add section |
-| **ENRICH** | Section exists but video adds delta — merge into existing section |
-| **SKIP** | Already covered; no new delta vs existing skill content |
-| **CONFLICT** | Contradicts existing guidance — ask user which to keep |
+| **NEW** | Not in the skill — add section |
+| **ENRICH** | Section exists — merge delta into it |
+| **SKIP** | Already covered |
+| **CONFLICT** | Contradicts existing guidance — ask user |
 
-Run the without-skill delta test (Step 7b) **against the existing skill**, not just general knowledge. Content must be new relative to what's already written.
+**Create new** (no existing skill): confirm skill name = main subject; proceed to Step 6.
 
-#### Create path
+### Step 6: Confirm which video parts to include
 
-No existing skill, or user chose to create a new one (use a distinct name if the topic diverges).
-
-### Step 5: Confirm scope and subcategories
-
-Use AskQuestion when available.
-
-**Create path** (only after Step 4 confirms no suitable existing skill):
+Present the Step 3 topic overview and ask **which subcategories or time ranges** from the video(s) should go into the skill.
 
 | Question | Purpose |
 |----------|---------|
-| Create a skill for **[main subject]**? | Confirms skill name |
-| Include all subcategories, or exclude some? | Scope filter |
-| Where to save? | See [Storage locations](#storage-locations) — offer all relevant options |
+| Include all listed subcategories, or only some? | Scope filter |
+| Any time ranges to exclude? | Fine-grained filter |
+| Exclude vendor promos, tangents, or unrelated domains? | Quality filter |
 
-**AskQuestion options for save location** — always include Cursor paths; never offer only `.agents/`:
+Respect answers strictly (e.g. "only Playwright flakiness" → exclude speed, MCP, Checkly sections).
+
+**Modify/add modes:** default to user-selected parts only; SKIP items not in scope.
+
+### Step 7: Choose project skills directory
+
+Ask which **single** project root to use. Offer only project-relative options — never global paths.
+
+**If the skill already exists in one project root**, default to that path. Only ask when creating new or when duplicates exist in multiple roots.
 
 ```
-Personal — ~/.cursor/skills/<name>/          ← default for Cursor users
-Project  — .cursor/skills/<name>/ in this repo
-Personal — ~/.agents/skills/<name>/          ← only if user wants open-standard / npx skills layout
-Project  — .agents/skills/<name>/ in this repo
+.cursor/skills/<name>/     ← Cursor
+.agents/skills/<name>/     ← open standard
+.claude/skills/<name>/     ← Claude Code
+.codex/skills/<name>/      ← Codex
 ```
 
-If the user said they use `.cursor/skills`, skip the agents options unless they ask for them.
+| Rule | Detail |
+|------|--------|
+| **One directory only** | Never write the same skill to `.cursor/` and `.agents/` in one session |
+| **No global paths** | Never `~/.cursor/skills/`, `~/.agents/skills/`, etc. |
+| **No silent default** | Do not pick `.agents/` unless the user chooses it |
+| **Commit with repo** | Output is project-local so the team can share it |
 
-**Update path:**
+Record the chosen path as `<skills-root>/<main-subject>/` for Steps 11–12.
 
-| Question | Purpose |
-|----------|---------|
-| Update **[existing skill]** with new content? | Confirms target |
-| Merge **NEW** and **ENRICH** items from the plan? | Scope filter (SKIP excluded by default) |
-| Resolve **CONFLICT** items how? | keep existing / adopt new / blend |
-| Update project, personal, or both? | Target location |
-
-Respect scope filters strictly (e.g. "only Playwright-related" → exclude vendor/product sections like Checkly deploy).
-
-### Step 6: Filter transcript content
+### Step 8: Filter transcript content
 
 Map confirmed subcategories to time ranges. Exclude opted-out segments.
 
@@ -308,11 +308,11 @@ python3 scripts/load_transcript.py "<youtube-url>" --start 300 --end 720 -o /tmp
 
 Distill only — never paste raw transcript into the skill.
 
-### Step 7: Build and validate skill (internal eval loop)
+### Step 9: Build and validate skill (internal eval loop)
 
 Read [skill-output-template.md](skill-output-template.md) and [reference-template.md](reference-template.md). **Run this loop before writing files.** Do not create `evals/` directories or deliver eval artifacts to the user.
 
-#### 7a. Draft from confirmed subcategories only
+#### 9a. Draft from confirmed subcategories only
 
 Split content mentally into two layers:
 
@@ -329,7 +329,7 @@ Transformation rules:
 5. Explain *why* for non-obvious rules
 6. **No duplicate paragraphs** across SKILL.md and reference.md — SKILL.md summarizes and links; reference.md holds depth
 
-#### 7b. Internal validation (do not skip)
+#### 9b. Internal validation (do not skip)
 
 For **each confirmed subcategory**, mentally run this check:
 
@@ -347,7 +347,7 @@ If a section fails: tighten instructions, add a bad/good code pair, or cut the s
 
 Run **2–3 prompts total** across subcategories (not one per section — stay lean). Revise draft until each would pass.
 
-#### 7c. Lean pass
+#### 9c. Lean pass
 
 Before finalizing:
 - Remove duplicate guidance across Quick Reference, Agent Instructions, and Pitfalls
@@ -357,9 +357,9 @@ Before finalizing:
 - Prefer one strong example per pattern over many weak ones
 - No transcript quotes, speaker names in body, or webinar housekeeping
 
-#### 7d. Frontmatter
+#### 9d. Frontmatter
 
-On **update**: revise `description` only when new subcategories add trigger terms. Do not rewrite unrelated sections of frontmatter.
+On **modify/add**: revise `description` only when new subcategories add trigger terms. On **full replace**, rewrite frontmatter to match the new scope.
 
 ```yaml
 ---
@@ -374,10 +374,10 @@ Rules:
 - **Third person** ("Writes and debugs…"), never "I can help you…"
 - **WHAT + WHEN** — capabilities and trigger terms
 - Max 1024 chars; lowercase hyphens in `name`; `name` must match parent folder per [spec](https://agentskills.io/specification)
-- Default output to `~/.cursor/skills/` when running in Cursor; use `.agents/skills/`, `.claude/skills/`, `.codex/skills/`, or another tool path only when the user chooses it
+- Output only under the project path chosen in Step 7
 - **Never** create skills in `~/.cursor/skills-cursor/` (Cursor internal directory)
 
-### Step 8: Design file split
+### Step 10: Design file split
 
 Plan the output directory **before writing**. Default to progressive disclosure — do not put everything in one file.
 
@@ -421,47 +421,24 @@ skill-name/
 
 Create only when the skill has many complete, copy-pasteable examples (e.g. 4+ multi-step test files). Keep SKILL.md and reference.md lean; put standalone examples in `examples.md` and link from both.
 
-### Step 9: Write or merge skill files
+### Step 11: Write or merge skill files
 
-#### Create path
-
-Write the full skill directory to the **confirmed** location:
+Write to **only** the path chosen in Step 7:
 
 ```
-~/.cursor/skills/<main-subject>/        # personal (Cursor — default)
-.cursor/skills/<main-subject>/          # project (Cursor)
-~/.agents/skills/<main-subject>/        # personal (open standard / npx skills)
-.agents/skills/<main-subject>/          # project (open standard)
-
-├── SKILL.md                            # required
-├── reference.md                        # required (default)
-└── examples.md                         # optional
+<skills-root>/<main-subject>/     # e.g. .cursor/skills/playwright/
+├── SKILL.md                      # required
+├── reference.md                  # required (default)
+└── examples.md                   # optional
 ```
 
-#### Storage locations
+#### Full replace
 
-Skills can live under any agent's standard directory — **the user's tool and existing install win**, not a fixed default.
+Rewrite files from the validated draft. Replace `SKILL.md` and `reference.md` content for the confirmed scope. Rebuild `## Source` for all included sources.
 
-| Tool / context | Personal path | Project path | When to use |
-|----------------|---------------|--------------|-------------|
-| **Cursor** (default here) | `~/.cursor/skills/<name>/` | `.cursor/skills/<name>/` | User works in Cursor; `@skill` resolves here |
-| Open standard / `npx skills` | `~/.agents/skills/<name>/` | `.agents/skills/<name>/` | User explicitly wants agents layout |
-| Claude Code | `~/.claude/skills/<name>/` | `.claude/skills/<name>/` | User says they use Claude |
-| Codex | `~/.codex/skills/<name>/` | `.codex/skills/<name>/` | User says they use Codex |
-| Custom | Path user provides | — | Honor verbatim |
+#### Modify / add
 
-| Situation | Action |
-|-----------|--------|
-| Existing skill found in Step 4 | **Update that path** — do not ask save location unless duplicates exist in multiple roots |
-| User says "my skills" / `@skill` | Use the path discovery returned |
-| Same name in `.cursor/` and `.agents/` | Ask which to update; **never silently pick `.agents/`** |
-| No existing skill, Cursor session | Default offer: `~/.cursor/skills/<name>/` first |
-
-**Never** create skills in `~/.cursor/skills-cursor/` (Cursor built-ins only).
-
-#### Update path
-
-**Merge, don't replace.** Preserve existing structure, heading names, and conventions unless the user asked for a rewrite.
+**Merge, don't blindly replace.** Preserve existing structure, heading names, and conventions.
 
 | File | Merge rules |
 |------|-------------|
@@ -492,16 +469,17 @@ After writing, verify:
 - [ ] SKILL.md under 500 lines
 - [ ] reference.md covers all confirmed subcategories in full
 - [ ] File references are one level deep
-- [ ] **Update only:** existing content preserved; merge plan items applied; no redundant restatements
+- [ ] **Modify/add only:** existing content preserved; merge plan items applied; no redundant restatements
+- [ ] **Full replace only:** old content fully superseded by confirmed scope
 
-### Step 10: Confirm with user
+### Step 12: Confirm with user
 
 Show:
-1. Skill path and invocation (`@skill-name` in Cursor, `/skill-name` where slash commands are supported)
-2. Mode: **created** or **updated**
+1. Project skill path (e.g. `.cursor/skills/playwright/`) and invocation (`@skill-name`)
+2. Mode: **created** / **full replace** / **modify** / **add**
 3. Files written (`SKILL.md`, `reference.md`, `examples.md` if any)
 4. Subcategories included (and excluded, if any)
-5. **Update only:** merge summary (NEW / ENRICH / SKIP counts)
+5. **Modify/add only:** merge summary (NEW / ENRICH / SKIP counts)
 6. `description` field (note if trigger terms were added)
 
 Ask once for adjustments. Do not expose internal validation steps unless the user asks.
@@ -549,11 +527,11 @@ Legacy: `scripts/fetch_transcript.py` (YouTube only). Prefer `load_transcript.py
 
 ## Build-Time Quality Checklist
 
-Run internally before Step 9:
+Run internally before Step 11:
 
-- [ ] Step 4 completed: globbed exact name + listed similar skills across `.cursor/skills/` and `.agents/skills/` (personal + project)
-- [ ] If existing skill found: merge plan shown before create/save questions
-- [ ] Output path matches user choice — default `~/.cursor/skills/` for Cursor, not `.agents/` unless requested
+- [ ] Step 4 completed: searched project `.cursor/skills/`, `.agents/skills/`, `.claude/skills/`, `.codex/skills/` only — no global paths
+- [ ] If existing skill found: user chose replace, modify, or add before scope questions
+- [ ] Step 7 completed: exactly one project skills directory chosen — never global, never multiple roots
 - [ ] Every section maps to a user-confirmed subcategory
 - [ ] Each subcategory survived the without-skill delta test
 - [ ] Quick Reference routes common prompts to the right section
@@ -566,8 +544,9 @@ Run internally before Step 9:
 - [ ] SKILL.md links to reference.md sections (one level deep)
 - [ ] No duplicate content between SKILL.md and reference.md
 - [ ] Description is third-person with WHAT + WHEN
-- [ ] **Update only:** delta tested against existing skill, not just general knowledge
-- [ ] **Update only:** Source section appended with new video entry
+- [ ] **Modify/add only:** delta tested against existing skill, not just general knowledge
+- [ ] **Modify/add only:** Source section appended with new video entry
+- [ ] **Full replace only:** Source section rebuilt for included sources
 
 ## Error Handling
 
@@ -583,43 +562,43 @@ Run internally before Step 9:
 
 ## Example Sessions
 
-### Create
+### Create new (no existing project skill)
 
 **User:** Create a skill from https://www.youtube.com/watch?v=kFv0bRH78xM — Playwright topics only
 
 **Agent:**
 1. Fetches transcript → main subject **Playwright**, 4 subcategories
-2. No existing skill found → create path
-3. Confirms scope (excludes Checkly monitoring) and save location
-4. Runs internal eval loop: flaky-login prompt → keeps `addLocatorHandler`; slow-goto prompt → keeps `domcontentloaded`; drops generic "use getByRole" filler
-5. Designs split: SKILL.md (routing + quick patterns) + reference.md (full flakiness/speed/MCP depth)
-6. Writes `~/.cursor/skills/playwright/SKILL.md` and `~/.cursor/skills/playwright/reference.md`
-7. Confirms path, files, subcategories, `@playwright`
+2. Searches project skill dirs → no `playwright/SKILL.md` found
+3. User picks subcategories (excludes Checkly monitoring)
+4. User chooses `.cursor/skills/playwright/` (not `.agents/`, not global)
+5. Runs internal eval loop → keeps `addLocatorHandler`, `domcontentloaded`; drops generic filler
+6. Writes `.cursor/skills/playwright/SKILL.md` + `reference.md`
+7. Confirms project path, files, subcategories, `@playwright`
 
-### Update
+### Modify existing project skill
 
-**User:** Update `@playwright` from https://www.youtube.com/watch?v=NEW_ID — component testing section only
+**User:** Update our Playwright skill from https://www.youtube.com/watch?v=NEW_ID — component testing section only
 
 **Agent:**
 1. Fetches transcript → finds **Component testing** (~12:00–18:30) and minor **Flakiness** additions
-2. Searches `~/.cursor/skills/playwright/` → **found**; reads `SKILL.md` + `reference.md`
-3. Merge plan: NEW component testing; ENRICH flakiness (clock mocking); SKIP speed (already covered)
-4. User confirms ENRICH + NEW, skips the rest
-5. Delta test vs existing skill → keeps clock mocking pattern; drops repeated `domcontentloaded` advice
-6. Merges into existing files; creates `## Component Testing` section; appends Source entry
-7. Confirms updated path, merge summary, new trigger terms in description
+2. Finds `.cursor/skills/playwright/SKILL.md` in project → reads existing files
+3. Asks mode → user picks **modify** (not full replace)
+4. User confirms only component testing + flakiness clock-mocking parts
+5. Merge plan: NEW component testing; ENRICH flakiness; SKIP speed
+6. Merges into `.cursor/skills/playwright/`; appends Source entry
+7. Confirms path, mode, merge summary
 
-### Create when skill already exists
+### Skill already exists — user picks mode
 
 **User:** Create a skill from [YouTube URL] — Playwright topics only
 
 **Agent:**
 1. Fetches transcript → main subject **Playwright**
-2. Searches skill dirs → finds `~/.cursor/skills/playwright/SKILL.md`
-3. **Does not ask "where to save" as if nothing exists.** Presents merge plan and asks: update existing `@playwright` or create a differently named skill?
-4. User chooses **update** → merge path (NEW / ENRICH / SKIP)
-5. Merges into `~/.cursor/skills/playwright/`; appends Source entry
-6. Confirms updated path and merge summary
+2. Finds `.cursor/skills/playwright/SKILL.md` in project
+3. Asks: **full replace**, **modify**, or **add**? User picks **add**
+4. User selects which new subcategories to include
+5. Adds NEW sections only; preserves existing content
+6. Confirms `.cursor/skills/playwright/`, mode=add, sections added
 
 ### Multi-source
 
@@ -628,6 +607,6 @@ Run internally before Step 9:
 **Agent:**
 1. Loads both → merged payload with 2 sources
 2. Clusters topics across YouTube (speed, flakiness) and Meet (CI strategy)
-3. User confirms scope
+3. No existing skill → user picks scope and `.cursor/skills/playwright/`
 4. Writes skill citing both sources in `## Source`
-5. Confirms files and `@playwright`
+5. Confirms project path and `@playwright`

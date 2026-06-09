@@ -17,7 +17,7 @@ npx skills add josemejiaglance/ai-tools@video-to-skill -a cursor -g -y
 npx skills add josemejiaglance/ai-tools@video-to-skill -y
 ```
 
-Then invoke `@video-to-skill` in your agent and provide a YouTube URL, meeting caption file, or pasted transcript.
+Then invoke `@video-to-skill` in your agent and provide a YouTube URL, meeting caption file, or pasted transcript. Generated skills are written to a project directory you choose (`.cursor/skills/`, `.agents/skills/`, etc.) — never to global paths.
 
 Browse more skills at [skills.sh](https://skills.sh/).
 
@@ -28,7 +28,7 @@ The **video-to-skill** skill:
 1. Loads transcripts from YouTube, Google Meet, Zoom, Teams, Loom, and other sources
 2. Clusters content into a main subject and subcategories
 3. Generates `SKILL.md` + `reference.md` following the Agent Skills standard
-4. Updates existing skills with new knowledge when you ask
+4. Creates or updates skills **in the current project only** (replace, modify, or add)
 
 ## Python setup
 
