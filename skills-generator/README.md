@@ -5,6 +5,10 @@ Turn videos, meeting recordings, and transcripts into [Agent Skills](https://age
 ## Install
 
 ```bash
+# Cursor
+npx skills add josemejiaglance/ai-tools@video-to-skill -a cursor -y
+
+# Open standard / other agents
 npx skills add josemejiaglance/ai-tools@video-to-skill -y
 ```
 
@@ -21,7 +25,11 @@ Then invoke `@video-to-skill` in your agent and provide a source.
 ## Python setup
 
 ```bash
-cd .agents/skills/video-to-skill   # or skills/video-to-skill when cloned
+cd .cursor/skills/video-to-skill          # Cursor project install
+# cd ~/.cursor/skills/video-to-skill      # Cursor global (-g)
+# cd .agents/skills/video-to-skill        # open-standard project install
+# cd skills/video-to-skill                # when cloned from git
+
 python3 -m pip install -r requirements.txt
 python3 scripts/load_transcript.py "https://youtu.be/VIDEO_ID" -o /tmp/transcript.json
 ```

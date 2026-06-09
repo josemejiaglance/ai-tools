@@ -5,21 +5,23 @@ An [Agent Skill](https://agentskills.io) that turns video and transcript content
 ## Install
 
 ```bash
-npx skills add josemejiaglance/ai-tools@video-to-skill
+# Cursor — project (recommended)
+npx skills add josemejiaglance/ai-tools@video-to-skill -a cursor -y
+
+# Cursor — global
+npx skills add josemejiaglance/ai-tools@video-to-skill -a cursor -g -y
 ```
 
-Bundles `scripts/` and `requirements.txt` for transcript loading.
+**Cursor paths:** `.cursor/skills/video-to-skill/` (project) or `~/.cursor/skills/video-to-skill/` (global `-g`). Bundles `scripts/` and `requirements.txt`.
 
-```bash
-# Global install
-npx skills add josemejiaglance/ai-tools@video-to-skill -g -y
-```
+If `npx skills` places a project copy under `.agents/skills/` instead, symlink it into `.cursor/skills/` so `@video-to-skill` resolves.
+
+For open-standard / multi-agent layout, omit `-a cursor` — installs to `.agents/skills/video-to-skill/`.
 
 ## Python setup
 
-From the installed skill directory (where `requirements.txt` lives):
-
 ```bash
+cd .cursor/skills/video-to-skill   # or ~/.cursor/skills/video-to-skill with -g
 python3 -m pip install -r requirements.txt
 ```
 

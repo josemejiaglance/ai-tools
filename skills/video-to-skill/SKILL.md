@@ -17,7 +17,7 @@ Follow [Agent Skills best practices](https://agentskills.io/specification): conc
 
 ## Prerequisites
 
-For auto-fetch and file parsing, install dependencies once per machine. Run commands from **this skill directory** (where `requirements.txt` and `scripts/` live):
+For auto-fetch and file parsing, install dependencies once per machine. Run commands from **this skill's install directory** (where `requirements.txt` and `scripts/` live — typically `~/.cursor/skills/video-to-skill/` or `.cursor/skills/video-to-skill/` in Cursor; `.agents/skills/video-to-skill/` for open-standard installs):
 
 ```bash
 python3 -m pip install -r requirements.txt

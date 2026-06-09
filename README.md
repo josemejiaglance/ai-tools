@@ -7,14 +7,14 @@ Tools and [Agent Skills](https://agentskills.io) for turning videos and transcri
 Use the [skills CLI](https://github.com/vercel-labs/skills) — no clone required:
 
 ```bash
-# Install the skill generator
-npx skills add josemejiaglance/ai-tools@video-to-skill
-
-# Install for a specific agent, skip prompts
+# Cursor (recommended) — project install
 npx skills add josemejiaglance/ai-tools@video-to-skill -a cursor -y
 
-# Install globally (all projects)
-npx skills add josemejiaglance/ai-tools@video-to-skill -g -y
+# Cursor — global install (all projects)
+npx skills add josemejiaglance/ai-tools@video-to-skill -a cursor -g -y
+
+# Other agents (open-standard layout)
+npx skills add josemejiaglance/ai-tools@video-to-skill -y
 ```
 
 Then invoke `@video-to-skill` in your agent and provide a YouTube URL, meeting caption file, or pasted transcript.
@@ -32,10 +32,19 @@ The **video-to-skill** skill:
 
 ## Python setup
 
-After installing, set up transcript tooling:
+After installing, set up transcript tooling from the skill directory:
+
+| Install | Path |
+|---------|------|
+| Cursor, project | `.cursor/skills/video-to-skill/` |
+| Cursor, global (`-g`) | `~/.cursor/skills/video-to-skill/` |
+| Open standard, project | `.agents/skills/video-to-skill/` |
+| Open standard, global | `~/.agents/skills/video-to-skill/` |
+
+> **Note:** `npx skills` may place a *project* copy under `.agents/skills/` even with `-a cursor`. Cursor loads `@video-to-skill` from `.cursor/skills/` — use `-g` for a global install, or symlink: `ln -sf ../.agents/skills/video-to-skill .cursor/skills/video-to-skill`
 
 ```bash
-cd .agents/skills/video-to-skill   # or ~/.agents/skills/video-to-skill with -g
+cd .cursor/skills/video-to-skill   # adjust path for your install scope
 python3 -m pip install -r requirements.txt
 ```
 
